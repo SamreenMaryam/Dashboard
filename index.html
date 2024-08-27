@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNAPP Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+        }
+        .dashboard {
+            padding: 20px;
+        }
+        .category {
+            margin-bottom: 20px;
+        }
+        .category-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .widgets {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+        }
+        .widget, .add-widget-button-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px;
+            flex: 1;
+            min-width: 0;
+            max-width: 33%;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .widget-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #444;
+            text-align: center;
+        }
+        .widget-content {
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+        .no-data {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+        .no-data img {
+            width: 40px;
+            height: 40px;
+            margin-bottom: 10px;
+        }
+        .remove-widget {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #999;
+        }
+        .add-widget-button {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            font-size: 16px;
+            color: #4CAF50;
+            text-align: center;
+            width: 100%;
+        }
+        .search-widget {
+            margin-bottom: 20px;
+        }
+        .search-widget input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="search-widget">
+            <input type="text" id="searchInput" placeholder="Search widgets..." oninput="searchWidgets()">
+        </div>
+
+        <div id="dashboard"></div>
+    </div>
+
+    <script>
+        let categories = [
+            {
+                name: "CSPM Executive Dashboard",
+                widgets: [
+                    { name: "Cloud Accounts", content: "<canvas id='cloudAccountsChart'></canvas>" },
+                    { name: "Cloud Account Risk Assessment", content: "<canvas id='riskAssessmentChart'></canvas>" },
+                    { name: "Add Widget", content: "" }
+                ]
+            },
+            {
+                name: "CWPP Dashboard",
+                widgets: [
+                    { name: "Top 5 Namespace Specific Alerts", content: `
+                        <div class="no-data">
+                            <img src="path/to/icon.png" alt="No Data">
+                            <div>No Graph data available!</div>
+                        </div>` 
+                    },
+                    { name: "Workload Alerts", content: `
+                        <div class="no-data">
+                            <img src="path/to/icon.png" alt="No Data">
+                            <div>No Graph data available!</div>
+                        </div>`
+                    },
+                    { name: "Add Widget", content: "" }
+                ]
+            },
+            {
+                name: "Registry Scan",
+                widgets: [
+                    { name: "Image Risk Assessment", content: `
+                        <div>
+                            <strong>1470</strong> Total Vulnerabilities<br>
+                            <div style="display: flex;">
+                                <div style="flex: 1; background-color: #ff0000; height: 20px; width: 9%;"></div>
+                                <div style="flex: 1; background-color: #ff4500; height: 20px; width: 150%;"></div>
+                                <div style="flex: 1; background-color: #ffa500; height: 20px; width: 6%;"></div>
+                            </div>
+                        </div>`
+                    },
+                    { name: "Image Security Issues", content: `
+                        <div>
+                            <strong>2</strong> Total Images<br>
+                            <div style="display: flex;">
+                                <div style="flex: 1; background-color: #ff0000; height: 20px; width: 2%;"></div>
+                                <div style="flex: 1; background-color: #ff4500; height: 20px; width: 2%;"></div>
+                                <div style="flex: 1; background-color: #ffa500; height: 20px; width: 1%;"></div>
+                            </div>
+                        </div>` 
+                    },
+                    { name: "Add Widget", content: "" }
+                ]
+            }
+        ];
+
+        function renderDashboard() {
+            const dashboard = document.getElementById('dashboard');
+            dashboard.innerHTML = '';
+            categories.forEach(category => {
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'category';
+                categoryDiv.innerHTML = `<div class="category-title">${category.name}</div>`;
+                const widgetsDiv = document.createElement('div');
+                widgetsDiv.className = 'widgets';
+                category.widgets.forEach(widget => {
+                    const widgetDiv = document.createElement('div');
+                    widgetDiv.className = widget.name === "Add Widget" ? 'add-widget-button-container' : 'widget';
+                    widgetDiv.innerHTML = widget.name === "Add Widget" ? 
+                        `<div class="add-widget-button" onclick="alert('Add Widget functionality to be implemented!')">+ Add Widget</div>` : 
+                        `
+                        <div class="remove-widget" onclick="removeWidget('${category.name}', '${widget.name}')">×</div>
+                        <div class="widget-title">${widget.name}</div>
+                        <div class="widget-content">${widget.content}</div>
+                    `;
+                    widgetsDiv.appendChild(widgetDiv);
+                });
+                categoryDiv.appendChild(widgetsDiv);
+                dashboard.appendChild(categoryDiv);
+            });
+            createCharts();
+        }
+
+        function addWidget() {
+            const name = document.getElementById('widgetName').value;
+            const content = document.getElementById('widgetContent').value;
+            const categoryName = document.getElementById('categorySelect').value;
+            if (name && content && categoryName) {
+                const category = categories.find(c => c.name === categoryName);
+                if (category) {
+                    category.widgets.push({ name, content });
+                    renderDashboard();
+                }
+            }
+        }
+
+        function removeWidget(categoryName, widgetName) {
+            const category = categories.find(c => c.name === categoryName);
+            if (category) {
+                category.widgets = category.widgets.filter(w => w.name !== widgetName);
+                renderDashboard();
+            }
+        }
+
+        function searchWidgets() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const allWidgets = document.querySelectorAll('.widget');
+            allWidgets.forEach(widget => {
+                const widgetName = widget.querySelector('.widget-title').textContent.toLowerCase();
+                const widgetContent = widget.querySelector('.widget-content').textContent.toLowerCase();
+                if (widgetName.includes(searchTerm) || widgetContent.includes(searchTerm)) {
+                    widget.style.display = 'block';
+                } else {
+                    widget.style.display = 'none';
+                }
+            });
+        }
+
+        function createCharts() {
+            const ctx1 = document.getElementById('cloudAccountsChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'pie',
+                data: {
+                    labels: ['Connected', 'Not Connected'],
+                    datasets: [{
+                        data: [2, 2],
+                        backgroundColor: ['#36A2EB', '#FF6384'],
+                    }]
+                }
+            });
+
+            const ctx2 = document.getElementById('riskAssessmentChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Failed', 'Warning', 'Not Available', 'Passed'],
+                    datasets: [{
+                        data: [1859, 88, 36, 723],
+                        backgroundColor: ['#FF6384', '#FFCE56', '#36A2EB', '#4BC0C0'],
+                    }]
+                }
+            });
+        }
+
+        renderDashboard();
+    </script>
+</body>
+</html>
